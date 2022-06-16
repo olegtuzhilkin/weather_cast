@@ -1,0 +1,1 @@
+curl -0 -X GET http://api.positionstack.com/v1/forward?access_key=a1567a1c4e82698080c3de2445183e23&query=Penza,PZ,Russia

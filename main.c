@@ -1,16 +1,11 @@
 #include <stdio.h>
-
+#include <stdlib.h>
 #include <getopt.h>
 
 #define CITY_LONG   256
 
 int main(int argc, char *argv[])
 {
-/*    int i;
-    for (i = 0; i < argc; i++){
-        printf("%s\n", argv[i]);
-    }*/
-
     char city[CITY_LONG];
     const char* short_options = "c:";
 
@@ -26,11 +21,16 @@ int main(int argc, char *argv[])
     while ((opchar = getopt_long(argc, argv, short_options, long_options, &opindex)) != -1){
         switch (opchar){
             case 'c':
-                    //sprintf(city, "%s", long_options[opindex].val);
                     printf("long opt is %s\n", long_options[opindex].name);
                     printf("short opt is %c\n", long_options[opindex].val);
-                    if (optarg != NULL)
-                        printf("arg is %s\n", optarg);
+                    if (optarg != NULL){
+                        sprintf(city, "%s", optarg);
+                        printf("arg is %s\n", city);
+                    }
+                    else{
+                        printf("You didn't enter the city\n");
+                        exit(0);
+                    }
                     break;
             case '?':
                     printf("opt is none\n");
