@@ -36,8 +36,10 @@ int main(int argc, char *argv[])
                     printf("opt is none\n");
                     exit(0);
                     break;
-        }
-    }
+        }//switch
+    }//while
+
+
 
     return 0;
 }
