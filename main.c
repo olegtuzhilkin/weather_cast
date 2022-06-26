@@ -25,7 +25,7 @@ char* get_request(char *city)
         return NULL;
     }
 
-    if((hp = gethostbyname("ya.ru")) == NULL){
+    if((hp = gethostbyname("api.positionstack.com")) == NULL){
             herror("gethostbyname");
             exit(1);
         }
@@ -43,7 +43,8 @@ char* get_request(char *city)
     printf("Connected\n");
 
     //Send some data
-    message = "GET / HTTP/1.1\r\n\r\n";
+    //message = "GET / HTTP/1.1\r\nHost: ya.ru\r\nUser-Agent: curl/7.74.0\r\nAccept: */*\r\n\r\n";
+    message = "GET /v1/forward?access_key=a1567a1c4e82698080c3de2445183e23&&query=Penza HTTP/1.1\r\nHost: api.positionstack.com\r\nUser-Agent: curl/7.74.0\r\nAccept: */*\r\n\r\n";
     if( send(socket_desc , message , strlen(message) , 0) < 0)
     {
         puts("Send failed");
