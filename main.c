@@ -8,13 +8,20 @@
 
 #include <netdb.h>      //getaddrinfo
 
+#include <errno.h>
+
+#include <unistd.h>
+
 #define CITY_LONG   256
+#define MSG_LONG    5096
 
 char* get_request(char *city)
 {
     int socket_desc;
     struct sockaddr_in server;
-    char *message, server_reply[2000];
+    char *message, server_reply[MSG_LONG], server_full[MSG_LONG];
+    char *start_addr_srv_rply = server_reply;
+    int len = 0;
 
     struct hostent *hp;
 
@@ -53,12 +60,30 @@ char* get_request(char *city)
     puts("Data Send\n");
 
     //Receive a reply from the server
-    if( recv(socket_desc, server_reply , 2000 , 0) < 0)
+ /*   if( recv(socket_desc, server_reply , MSG_LONG , 0) < 0)
     {
         puts("recv failed");
+    }*/
+    int n;
+    //har addr[4][1460];
+
+    while((errno = 0, (n = recv(socket_desc, server_reply, MSG_LONG, 0))>0) || errno == EINTR)
+    {
+        printf("\n\nReceived %d bytes\n\n", n);
+        if(n>0){
+            //printf("%s", server_reply);//output.append(buffer, n);
+            memcpy(server_full+strlen(server_full), server_reply, n);
+            printf("%s", server_full);
+            memset(server_reply, '\r', MSG_LONG);
+            //usleep(20000);
+        }
+        else
+            break;
     }
     puts("Reply received\n");
     puts(server_reply);
+
+    return 0;
 }
 
 int main(int argc, char *argv[])
