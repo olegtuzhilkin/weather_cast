@@ -8,57 +8,83 @@
 
 #include <netdb.h>      //getaddrinfo
 
+#include <errno.h>
+#include <fcntl.h>
+
 #define CITY_LONG   256
+#define RQST_LONG   256
+#define MSG_LONG    5096
+
+void setFdNonblock(int fd)
+{
+    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
+}
 
 char* get_request(char *city)
 {
     int socket_desc;
     struct sockaddr_in server;
-    char *message, server_reply[2000];
-
+    char message[RQST_LONG], server_reply[MSG_LONG];
+    static char whole_request[MSG_LONG];
     struct hostent *hp;
 
     //create socket
     socket_desc = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_desc == -1){
-        printf("Could not create socket\n");
+        printf("error: Could not create socket\n");
         return NULL;
     }
 
     if((hp = gethostbyname("api.positionstack.com")) == NULL){
-            herror("gethostbyname");
-            exit(1);
-        }
+        printf("error: gethostbyname\n");
+        return NULL;
+    }
 
-    memcpy(&server.sin_addr, hp->h_addr, hp->h_length);
-   // server.sin_addr.s_addr = inet_addr("google.com");
+    if (memcpy(&server.sin_addr, hp->h_addr, hp->h_length) == NULL){
+        printf("error: memcpy\n\rCouldn't copy memory\n");
+        return NULL;
+    }
+
     server.sin_family = AF_INET;
     server.sin_port = htons(80);
 
     //Connect to remote server
     if (connect(socket_desc, (struct sockaddr*)&server, sizeof(server)) < 0){
-        printf("Connection error\n");
+        printf("error: Connection error\n");
         return NULL;
     }
     printf("Connected\n");
 
     //Send some data
-    //message = "GET / HTTP/1.1\r\nHost: ya.ru\r\nUser-Agent: curl/7.74.0\r\nAccept: */*\r\n\r\n";
-    message = "GET /v1/forward?access_key=a1567a1c4e82698080c3de2445183e23&&query=Penza HTTP/1.1\r\nHost: api.positionstack.com\r\nUser-Agent: curl/7.74.0\r\nAccept: */*\r\n\r\n";
-    if( send(socket_desc , message , strlen(message) , 0) < 0)
+    sprintf(message, "GET /v1/forward?access_key=a1567a1c4e82698080c3de2445183e23&&query=%s HTTP/1.1\r\nHost: api.positionstack.com\r\nUser-Agent: weather_cast_1.0\r\nAccept: */*\r\n\r\n", city);
+    if(send(socket_desc , message , strlen(message) , 0) < 0)
     {
-        puts("Send failed");
+        printf("error: Sending request is failed\n");
         return NULL;
     }
     puts("Data Send\n");
 
     //Receive a reply from the server
-    if( recv(socket_desc, server_reply , 2000 , 0) < 0)
-    {
-        puts("recv failed");
+//    setFdNonblock(socket_desc);
+    char enter = 1;                         //condition to enter to while. switch enter to 0 after getting end_rqst
+    int n = 0, whole_msg_pos = 0;           //n - count of received bytes, whole_msg_pos - shift osition in dest buffer - whole request
+    char end_rqst[] = "}]}\r\n";            //condition of success received message
+    while (enter){
+        if((n = recv(socket_desc, server_reply , MSG_LONG, 0)) > 0){    //receive data from server
+            printf("received %d bytes\n", n);
+            if (memcpy(whole_request+whole_msg_pos, server_reply, n) == NULL){  //copy data to dest buffer
+                printf("error: memcpy\n\rCouldn't copy memory\n");
+                return NULL;
+            };
+            whole_msg_pos += n;             //shift pointer at dest buffet
+            if (strstr(server_reply, end_rqst) != NULL)     //if end condition is received - exit from receuve cycle
+                enter = 0;
+        }
     }
-    puts("Reply received\n");
-    puts(server_reply);
+
+    printf("Reply received\n");
+    printf("%s\n", whole_request);
+    return whole_request;
 }
 
 int main(int argc, char *argv[])
