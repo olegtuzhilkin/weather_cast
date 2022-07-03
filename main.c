@@ -62,16 +62,17 @@ char* get_request(char *city)
         printf("error: Sending request is failed\n");
         return NULL;
     }
-    puts("Data Send\n");
+//    printf("Data Send\n");
 
     //Receive a reply from the server
 //    setFdNonblock(socket_desc);
     char enter = 1;                         //condition to enter to while. switch enter to 0 after getting end_rqst
     int n = 0, whole_msg_pos = 0;           //n - count of received bytes, whole_msg_pos - shift osition in dest buffer - whole request
-    char end_rqst[] = "}]}\r\n";            //condition of success received message
+    char end_rqst[] = "]}\r\n";            //condition of success received message
     while (enter){
+        //printf("errno=%d",errno);
         if((n = recv(socket_desc, server_reply , MSG_LONG, 0)) > 0){    //receive data from server
-            printf("received %d bytes\n", n);
+//            printf("received %d bytes\n", n);
             if (memcpy(whole_request+whole_msg_pos, server_reply, n) == NULL){  //copy data to dest buffer
                 printf("error: memcpy\n\rCouldn't copy memory\n");
                 return NULL;
@@ -82,14 +83,14 @@ char* get_request(char *city)
         }
     }
 
-    printf("Reply received\n");
-    printf("%s\n", whole_request);
+//    printf("Reply received\n");
+//    printf("%s\n", whole_request);
     return whole_request;
 }
 
 int main(int argc, char *argv[])
 {
-    char city[CITY_LONG];
+    char city[CITY_LONG], *pos_req = NULL;
     const char* short_options = "c:";
 
     extern char* optarg;
@@ -109,7 +110,14 @@ int main(int argc, char *argv[])
                     if (optarg != NULL){
                         sprintf(city, "%s", optarg);
                         printf("arg is %s\n", city);
-                        get_request(city);
+                        pos_req = get_request(city);
+                        if (pos_req != NULL){
+                            printf("\n%s\n", pos_req);
+                        }
+                        else{
+                            printf("bad request\n");
+                            exit(0);
+                        }
                     }
                     else{
                         printf("You didn't enter the city\n");

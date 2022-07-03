@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 5.0.1, 2022-07-03T16:11:24. -->
+<!-- Written by QtCreator 5.0.1, 2022-07-03T16:20:51. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -237,7 +237,7 @@
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:/home/marek/qt-proj/weather_cast/weather_cast.pro</value>
     <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">/home/marek/qt-proj/weather_cast/weather_cast.pro</value>
-    <value type="QString" key="RunConfiguration.Arguments">--city Penza</value>
+    <value type="QString" key="RunConfiguration.Arguments">--city Zasechnoe</value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>
     <value type="bool" key="RunConfiguration.UseLibrarySearchPath">true</value>
