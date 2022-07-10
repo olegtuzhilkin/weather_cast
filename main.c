@@ -11,16 +11,26 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include <ctype.h>
+
 #define CITY_LONG   256
 #define RQST_LONG   256
 #define MSG_LONG    5096
+
+#define PARAM_FLOAT     0
+#define PARAM_STRING    1
+
+struct t_location {
+    char label[100];
+    char latitude[10], longitude[10];
+};
 
 void setFdNonblock(int fd)
 {
     fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK);
 }
 
-char* get_request(char *city)
+char *get_request(char *city)
 {
     int socket_desc;
     struct sockaddr_in server;
@@ -88,10 +98,95 @@ char* get_request(char *city)
     return whole_request;
 }
 
+char *copy_param(char *req, char *dest, char *param, int param_type)
+{
+    char *tmp;
+    int length;
+    tmp = NULL; length = 0;
+
+    req = strstr(req, param);
+    if (req != NULL){
+        switch (param_type) {
+        case PARAM_FLOAT:
+            req += strlen(param);
+            while (!isdigit((int)(*req)))
+                req++;
+            tmp = req;
+            while ((isdigit((int)(*tmp)))||(*tmp == '.'))
+                tmp++;
+
+            length = tmp - req;
+            strncpy(dest, req, length);
+            break;
+        case PARAM_STRING:
+            req += strlen(param);
+            while (!isalpha((int)(*req)))
+                req++;
+            tmp = req;
+            while ((isalpha((int)(*tmp)))||(*tmp == ',')||(*tmp == ' '))
+                tmp++;
+
+            length = tmp - req;
+            strncpy(dest, req, length);
+            break;
+        }
+    }
+
+    return req;
+}
+
+struct t_location* parse_coord(char *request, int *cntr)
+{
+    static struct t_location* result;
+    int *counter = cntr;
+    char *req = request,
+         *tmp;
+
+    int length;
+
+    if (result != NULL)
+        free(result);           //????
+    //counter = *cntr;
+    *counter = 0; length = 0;
+    result = NULL;
+
+    req = strstr(req, "data");
+    if (req != NULL){
+
+        tmp = strstr(req, "latitude");
+        while (tmp != NULL){
+            (*counter)++;
+            result = realloc(result, (*counter)*sizeof (struct t_location));
+
+            req = copy_param(req, result[(*counter)-1].latitude, "latitude", PARAM_FLOAT);
+            req = copy_param(req, result[(*counter)-1].longitude, "longitude", PARAM_FLOAT);
+            req = copy_param(req, result[(*counter)-1].label, "label", PARAM_STRING);
+
+//                req = strstr(req, "label");
+//                if (req != NULL){
+//                    req = strchr(req, ':')+1;
+//                    tmp = strchr(req, '}')-2;
+//                    length = tmp - req;
+//                    strncpy(result[counter-1].label, req+1, length);
+//                    }
+
+
+            tmp = strstr(req, "latitude");
+        }
+
+    }
+
+    return result;
+}
+
 int main(int argc, char *argv[])
 {
     char city[CITY_LONG], *pos_req = NULL;
     const char* short_options = "c:";
+
+    struct t_location *cities_list;
+    int counter, current_pos;
+    int i;
 
     extern char* optarg;
     extern int optind;
@@ -101,6 +196,11 @@ int main(int argc, char *argv[])
         {"city", required_argument, NULL, 'c'},
         {NULL, 0, NULL, 0}
     };
+
+    current_pos = 0;
+
+    setbuf(stdout, NULL);
+    setbuf(stdin, NULL);
 
     while ((opchar = getopt_long(argc, argv, short_options, long_options, &opindex)) != -1){
         switch (opchar){
@@ -113,11 +213,29 @@ int main(int argc, char *argv[])
                         pos_req = get_request(city);
                         if (pos_req != NULL){
                             printf("\n%s\n", pos_req);
+
                         }
                         else{
                             printf("bad request\n");
                             exit(0);
                         }
+
+                        cities_list = parse_coord(pos_req, &counter);
+
+                        if (counter > 1){
+                            printf("Please enter the number of city which you need:\n");
+                            for (i = 0; i < counter; i++){
+                                printf("%d: %s\n", i, cities_list[i].label);
+                            }
+                            printf("-------------------------------------------------------\n");
+                            scanf(" %d", &current_pos);
+                            if (current_pos >= counter){
+                                printf("error: you entered incorrect value\n");
+                                exit(0);
+                            }
+                            //printf("%d\n", current_pos);
+                        }
+
                     }
                     else{
                         printf("You didn't enter the city\n");

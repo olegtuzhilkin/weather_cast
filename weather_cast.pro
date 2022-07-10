@@ -1,8 +1,9 @@
+QT -= core gui
 TEMPLATE = app
 CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
-CONFIG += c11
+#CONFIG += c11
 
 SOURCES += \
         main.c
